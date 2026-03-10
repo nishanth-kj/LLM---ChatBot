@@ -1,0 +1,13 @@
+{
+    "name": "chatbot-desktop",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "frontend:build": "npm run build --prefix frontend",
+        "backend:build": "cd backend && uv run pyinstaller build.py --clean --noconfirm",
+        "tauri": "tauri"
+    },
+    "devDependencies": {
+        "@tauri-apps/cli": "^2.2.8"
+    }
+}

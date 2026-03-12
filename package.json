@@ -1,11 +1,14 @@
 {
-    "name": "chatbot-desktop",
+    "name": "ai-desktop-app",
     "version": "0.1.0",
     "private": true,
     "scripts": {
+        "dev": "npm run tauri dev",
+        "install:all": "npm install && cd frontend && npm install && cd ../backend && uv sync",
         "frontend:build": "npm run build --prefix frontend",
         "backend:build": "cd backend && uv run pyinstaller build.py --clean --noconfirm",
-        "tauri": "tauri"
+        "tauri": "tauri",
+        "build": "npm run backend:build && npm run tauri build"
     },
     "devDependencies": {
         "@tauri-apps/cli": "^2.2.8"

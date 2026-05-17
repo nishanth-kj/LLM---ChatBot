@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, UploadFile, File
+from pathlib import Path
 from routes.request import ChatRequest, SwitchModelRequest
 from utils.api_response import ApiResponse
 from utils.logger import logger
@@ -80,4 +81,41 @@ async def switch_model(request: Request, switch_request: SwitchModelRequest):
         return ApiResponse.fail(404, str(e))
     except Exception as e:
         logger.error(f"Error switching model: {e}")
+        return ApiResponse.fail(500, str(e))
+
+
+@router.post("/documents/upload")
+async def upload_document(request: Request, file: UploadFile = File(...)):
+    """Upload a PDF file and rebuild the vector store index for RAG"""
+    from fastapi import UploadFile
+    from core.config import settings
+    import shutil
+    
+    llm_service = request.app.state.llm_service
+    if not llm_service:
+        return ApiResponse.fail(500, "LLM Service is not initialized")
+        
+    try:
+        # Create documents directory if it doesn't exist
+        doc_dir = Path(settings.data_path)
+        doc_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save file to the documents directory
+        file_path = doc_dir / file.filename
+        with file_path.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        logger.info(f"Saved document {file.filename} to {file_path}")
+        
+        # Trigger rebuild of the vector database
+        llm_service.vector_store_service.rebuild_vector_store()
+        
+        # Re-initialize the LLM conversational chain with the new retriever
+        llm_service._initialize_chain()
+        
+        return ApiResponse.success({
+            "message": f"Successfully uploaded {file.filename} and rebuilt vector store index."
+        })
+    except Exception as e:
+        logger.error(f"Error uploading document: {e}")
         return ApiResponse.fail(500, str(e))

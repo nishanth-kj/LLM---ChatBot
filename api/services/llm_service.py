@@ -7,6 +7,8 @@ from services.vector_service import VectorStoreService
 from utils.logger import logger
 import os
 
+from repository.setting_repository import SettingRepository
+
 class LLMService:
     """Service for managing LLM operations and Playground"""
     
@@ -15,13 +17,21 @@ class LLMService:
         self.vector_store_service = None
         self.chain = None
         self.memory = None
+        self.setting_repo = SettingRepository()
         
         # Determine models directory
         self.models_dir = Path(settings.model_path).parent
         if not self.models_dir.exists():
             self.models_dir.mkdir(parents=True, exist_ok=True)
             
-        self.current_model = Path(settings.model_path).name
+        # Restore active model from database repository if registered
+        saved_model = self.setting_repo.get("current_model")
+        if saved_model:
+            self.current_model = saved_model
+            settings.model_path = str(self.models_dir / saved_model)
+        else:
+            self.current_model = Path(settings.model_path).name
+            
         self._initialize()
     
     def get_available_models(self):
@@ -43,6 +53,10 @@ class LLMService:
         logger.info(f"Switching to model: {model_filename}")
         self.current_model = model_filename
         settings.model_path = str(model_path)
+        
+        # Persist model selection in Postgres database settings table using repository layout
+        self.setting_repo.set("current_model", model_filename)
+        
         # Re-initialize with new model
         self._initialize_llm(model_path)
         self._initialize_chain()

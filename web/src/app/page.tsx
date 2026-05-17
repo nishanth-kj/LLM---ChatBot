@@ -6,22 +6,22 @@ export default function Home() {
   return (
     <>
       <header>
-        <div className="Neuro">
-          <p>Neuro Kode</p>
-          <div className="account"></div>
+        <div className="header-container">
+          <p>LLM Playground</p>
+          <div className="account">👤</div>
         </div>
       </header>
       <main>
-        <div className="ayur">
+        <div className="chatbot">
           <center>
-            <p className="ayur-text">Ayur Bot 🤖</p>
+            <p className="chatbot-text">LLM Chatbot 🤖</p>
           </center>
         </div>
         <ChatWindow />
       </main>
       <footer className="footer">
         <p style={{ fontSize: "15px", fontFamily: "Arial", margin: 0 }}>
-          Copyright © 2024 Health Bot | Powered by Neuro Kode
+          Copyright © 2026 LLM Chatbot | Local LLM Playground
         </p>
       </footer>
     </>

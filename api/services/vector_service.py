@@ -86,6 +86,11 @@ class VectorStoreService:
         self.vector_store.save_local(str(vectorstore_path))
         logger.info(f"Vector store saved to {vectorstore_path}")
     
+    def rebuild_vector_store(self):
+        """Re-scan documents directory and rebuild FAISS database"""
+        logger.info("Rebuilding FAISS index from documents directory...")
+        self._create_vector_store()
+    
     def get_retriever(self, k: int = None):
         """Get retriever for similarity search"""
         if k is None:

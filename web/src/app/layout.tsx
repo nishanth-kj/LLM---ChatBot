@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Website",
-  description: "Powered by Neuro Kode",
+  title: "LLM Chatbot | Local LLM Playground",
+  description: "A premium local LLM Chatbot powered by Mistral and FAISS Vector Database with RAG document uploading capabilities.",
 };
 
 export default function RootLayout({

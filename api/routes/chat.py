@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Request, HTTPException
-from models.schemas import ChatRequest, SwitchModelRequest
+from fastapi import APIRouter, Request
+from routes.request import ChatRequest, SwitchModelRequest
 from utils.api_response import ApiResponse
 from utils.logger import logger
+from repository.chat_repository import ChatRepository
 
 router = APIRouter()
+chat_repo = ChatRepository()
 
 @router.post("/chat")
 async def process_chat(request: Request, chat_request: ChatRequest):
@@ -17,9 +19,33 @@ async def process_chat(request: Request, chat_request: ChatRequest):
 
     try:
         answer = llm_service.get_response(chat_request.question)
+        
+        # Log transaction to PostgreSQL using Repository pattern
+        chat_repo.save(
+            model=llm_service.current_model or "Unknown",
+            system_prompt="",
+            input_text=chat_request.question,
+            response_text=answer
+        )
+        
         return ApiResponse.success({"answer": answer})
     except Exception as e:
         logger.error(f"Chat error: {e}")
+        return ApiResponse.fail(500, str(e))
+
+
+@router.post("/reset")
+async def reset_chat(request: Request):
+    """Reset the chat history memory"""
+    llm_service = request.app.state.llm_service
+    if not llm_service:
+        return ApiResponse.fail(500, "LLM Service is not initialized")
+        
+    try:
+        llm_service.reset_memory()
+        return ApiResponse.success({"message": "Memory cleared successfully"})
+    except Exception as e:
+        logger.error(f"Error resetting memory: {e}")
         return ApiResponse.fail(500, str(e))
 
 

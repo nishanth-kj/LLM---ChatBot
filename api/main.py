@@ -2,11 +2,12 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from core.config import settings
-from models.schemas import HealthResponse
+from routes.response import HealthResponse
 from services.llm_service import LLMService
 from routes import chat
 from utils.logger import logger
 from utils.api_response import ApiResponse
+from repository.database.init_db import init_db
 
 # Global LLM service instance
 llm_service = None
@@ -19,6 +20,10 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting up application...")
     try:
+        # Initialize PostgreSQL DB Tables
+        logger.info("Initializing database tables...")
+        init_db()
+        
         llm_service = LLMService()
         # Inject llm_service into app state so routers can access it
         app.state.llm_service = llm_service

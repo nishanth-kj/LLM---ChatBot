@@ -1,14 +1,13 @@
-# AI Desktop App
+# AI Web App
 
-A premium, RAG-based desktop application for healthcare professionals, built with **Tauri**, **Next.js**, and **FastAPI**.
+A premium, RAG-based web application for healthcare professionals, built with **Next.js**, and **FastAPI**.
 
 ## 🚀 Overview
 
-AI Desktop App provides a seamless, high-performance interface for interacting with LLMs locally. It leverages a modular layered architecture to ensure scalability and ease of maintenance.
+AI Web App provides a seamless, high-performance interface for interacting with LLMs locally. It leverages a modular layered architecture to ensure scalability and ease of maintenance.
 
 ### Key Features
 - **Local RAG**: Context-aware chat using your own documents.
-- **Tauri Desktop Layer**: Lightweight and secure desktop application.
 - **FastAPI Backend**: High-performance Python API for LLM orchestration.
 - **Next.js Frontend**: Modern, responsive UI with Tailwind CSS.
 
@@ -17,13 +16,11 @@ AI Desktop App provides a seamless, high-performance interface for interacting w
 ## 📂 Project Structure
 
 ```text
-ai-desktop-app/
-├── frontend/         # React / Next.js UI (TypeScript & Tailwind)
-├── src-tauri/        # Rust desktop layer (Security & Windowing)
-├── backend/          # Python AI API (FastAPI & Modular Architecture)
+ai-web-app/
+├── web/              # React / Next.js UI (TypeScript & Tailwind)
+├── api/              # Python AI API (FastAPI & Modular Architecture)
 ├── models/           # Local LLM models (*.gguf)
 ├── docker-compose.yml # Containerized orchestration
-├── package.json      # Unified project scripts
 └── README.md         # Project documentation
 ```
 
@@ -32,7 +29,6 @@ ai-desktop-app/
 ## 🛠️ Prerequisites
 
 - **Node.js** (LTS)
-- **Rust** (Stable)
 - **Python 3.10+**
 - **uv** (Python package manager)
 - **Docker & Docker Compose** (Optional, for containerized dev)
@@ -42,9 +38,11 @@ ai-desktop-app/
 ## ⚡ Quick Start
 
 ### 1. Unified Setup
-From the project root, run the following to install all dependencies for frontend, backend, and Tauri:
+From the project root, run the following to install all dependencies:
 ```bash
-npm run install:all
+npm install
+cd web && npm install
+cd ../api && uv sync
 ```
 
 ### 2. Model Preparation

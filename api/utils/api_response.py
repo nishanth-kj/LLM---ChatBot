@@ -17,7 +17,7 @@ class ApiResponse(BaseModel):
     @classmethod
     def success(cls, data: Any = None):
         return cls(
-            status=ApiStatus.SUCCESS,
+            status=ApiStatus.SUCCESS.code,
             error=None,
             data=data
         )
@@ -25,7 +25,7 @@ class ApiResponse(BaseModel):
     @classmethod
     def fail(cls, error_code: int, message: str, field: Any = None, data: Any = None):
         return cls(
-            status=ApiStatus.ERROR,
+            status=ApiStatus.ERROR.code,
             error=ErrorDetail(
                 code=error_code,
                 message=message,

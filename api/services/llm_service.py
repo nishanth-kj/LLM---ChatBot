@@ -2,48 +2,57 @@ from pathlib import Path
 from langchain_community.llms import CTransformers
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
-from app.core.config import settings
-from app.services.vector_service import VectorStoreService
-import logging
-
-logger = logging.getLogger(__name__)
-
+from core.config import settings
+from services.vector_service import VectorStoreService
+from utils.logger import logger
+import os
 
 class LLMService:
-    """Service for managing LLM operations"""
+    """Service for managing LLM operations and Playground"""
     
     def __init__(self):
         self.llm = None
         self.vector_store_service = None
         self.chain = None
         self.memory = None
+        
+        # Determine models directory
+        self.models_dir = Path(settings.model_path).parent if Path(settings.model_path).exists() else Path("models")
+        if not self.models_dir.exists():
+            self.models_dir.mkdir(parents=True, exist_ok=True)
+            
+        self.current_model = Path(settings.model_path).name
         self._initialize()
     
+    def get_available_models(self):
+        """List all available models in the models directory"""
+        try:
+            if not self.models_dir.exists():
+                return []
+            return [f.name for f in self.models_dir.glob("*.gguf")] + [f.name for f in self.models_dir.glob("*.bin")]
+        except Exception as e:
+            logger.error(f"Error listing models: {e}")
+            return []
+
+    def switch_model(self, model_filename: str):
+        """Switch the current LLM to a new model"""
+        model_path = self.models_dir / model_filename
+        if not model_path.exists():
+            raise FileNotFoundError(f"Model {model_filename} not found in {self.models_dir}")
+        
+        logger.info(f"Switching to model: {model_filename}")
+        self.current_model = model_filename
+        settings.model_path = str(model_path)
+        # Re-initialize with new model
+        self._initialize_llm(model_path)
+        self._initialize_chain()
+        return True
+
     def _initialize(self):
         """Initialize LLM, vector store, and conversation chain"""
         try:
-            # Initialize vector store
             logger.info("Initializing vector store service...")
             self.vector_store_service = VectorStoreService()
-            
-            # Initialize LLM
-            model_path = Path(settings.model_path)
-            if not model_path.exists():
-                logger.error(f"Model file not found at {model_path}")
-                raise FileNotFoundError(
-                    f"Model file not found at {model_path}. "
-                    f"Please download the model and place it in the models directory."
-                )
-            
-            logger.info(f"Loading LLM model from {model_path}...")
-            self.llm = CTransformers(
-                model=str(model_path),
-                model_type=settings.model_type,
-                config={
-                    'max_new_tokens': settings.max_new_tokens,
-                    'temperature': settings.temperature
-                }
-            )
             
             # Initialize memory
             logger.info("Initializing conversation memory...")
@@ -52,23 +61,44 @@ class LLMService:
                 return_messages=True
             )
             
-            # Initialize conversation chain
-            logger.info("Creating conversation chain...")
-            self.chain = ConversationalRetrievalChain.from_llm(
-                llm=self.llm,
-                chain_type='stuff',
-                retriever=self.vector_store_service.get_retriever(),
-                memory=self.memory
-            )
-            
+            model_path = Path(settings.model_path)
+            if not model_path.exists():
+                logger.warning(f"Default model file not found at {model_path}. Will need to load a model manually.")
+            else:
+                self._initialize_llm(model_path)
+                self._initialize_chain()
+                
             logger.info("LLM service initialized successfully")
         except Exception as e:
             logger.error(f"Error initializing LLM service: {e}")
             raise
+
+    def _initialize_llm(self, model_path: Path):
+        logger.info(f"Loading LLM model from {model_path}...")
+        self.llm = CTransformers(
+            model=str(model_path),
+            model_type=settings.model_type,
+            config={
+                'max_new_tokens': settings.max_new_tokens,
+                # 'temperature': settings.temperature  # add back if settings has it
+            }
+        )
+
+    def _initialize_chain(self):
+        logger.info("Creating conversation chain...")
+        self.chain = ConversationalRetrievalChain.from_llm(
+            llm=self.llm,
+            chain_type='stuff',
+            retriever=self.vector_store_service.get_retriever(),
+            memory=self.memory
+        )
     
     def get_response(self, question: str) -> str:
         """Get response from the LLM for a given question"""
         try:
+            if not self.is_initialized:
+                return "Error: No model loaded. Please load a model first."
+                
             logger.info(f"Processing question: {question[:50]}...")
             result = self.chain({"question": question})
             answer = result.get("answer", "I'm sorry, I couldn't generate a response.")
@@ -80,8 +110,9 @@ class LLMService:
     
     def reset_memory(self):
         """Reset conversation memory"""
-        self.memory.clear()
-        logger.info("Conversation memory reset")
+        if self.memory:
+            self.memory.clear()
+            logger.info("Conversation memory reset")
     
     @property
     def is_initialized(self) -> bool:

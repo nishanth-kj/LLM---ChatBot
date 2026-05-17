@@ -1,8 +1,6 @@
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from app.core.config import settings
-import logging
-
-logger = logging.getLogger(__name__)
+from core.config import settings
+from utils.logger import logger
 
 class EmbeddingService:
     """Service for managing text embeddings"""

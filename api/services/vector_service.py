@@ -1,13 +1,10 @@
 from pathlib import Path
 from langchain_community.document_loaders import PyPDFLoader, DirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from app.services.embedding_service import EmbeddingService
+from services.embedding_service import EmbeddingService
 from langchain_community.vectorstores import FAISS
-from app.core.config import settings
-import logging
-
-logger = logging.getLogger(__name__)
-
+from core.config import settings
+from utils.logger import logger
 
 class VectorStoreService:
     """Service for managing vector store operations"""
@@ -22,10 +19,7 @@ class VectorStoreService:
         """Initialize embeddings and vector store"""
         try:
             logger.info("Initializing embeddings...")
-            self.embeddings = HuggingFaceEmbeddings(
-                model_name=settings.embedding_model,
-                model_kwargs={'device': settings.device}
-            )
+            self.embeddings = self.embedding_service.get_embeddings()
             
             # Check if vector store exists
             vectorstore_path = Path(settings.vectorstore_path)

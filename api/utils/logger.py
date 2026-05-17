@@ -2,7 +2,7 @@ import logging
 import sys
 import os
 
-def setup_logger(name="MemeApp"):
+def setup_logger(name="ChatBot"):
     # Ensure logs directory exists
     os.makedirs("logs", exist_ok=True)
     

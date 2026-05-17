@@ -17,7 +17,7 @@ class LLMService:
         self.memory = None
         
         # Determine models directory
-        self.models_dir = Path(settings.model_path).parent if Path(settings.model_path).exists() else Path("models")
+        self.models_dir = Path(settings.model_path).parent
         if not self.models_dir.exists():
             self.models_dir.mkdir(parents=True, exist_ok=True)
             
